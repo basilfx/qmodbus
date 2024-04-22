@@ -27,10 +27,12 @@ int SerialSettingsWidget::setupModbusPort()
     ui->serialPort->clear();
 	foreach( QextPortInfo port, QextSerialEnumerator::getPorts() )
 	{
-#ifdef Q_OS_WIN
-        ui->serialPort->addItem( port.friendName );
+#if defined(Q_OS_WIN)
+		ui->serialPort->addItem( port.friendName );
+#elif defined(Q_OS_DARWIN)
+		ui->serialPort->addItem( port.portName );
 #else
-        ui->serialPort->addItem( port.physName );
+		ui->serialPort->addItem( port.physName );
 #endif
 		if( port.friendName == s.value( "serialinterface" ) )
 		{
@@ -89,7 +91,7 @@ void SerialSettingsWidget::changeSerialPort( int )
 		settings.setValue( "serialparity", ui->parity->currentText() );
 		settings.setValue( "serialdatabits", ui->dataBits->currentText() );
 		settings.setValue( "serialstopbits", ui->stopBits->currentText() );
-#ifdef Q_OS_WIN32
+#if defined(Q_OS_WIN)
 		QString port = ports[iface].portName;
 
 		// is it a serial port in the range COM1 .. COM9?
@@ -98,6 +100,8 @@ void SerialSettingsWidget::changeSerialPort( int )
 			// use windows communication device name "\\.\COMn"
 			port = "\\\\.\\" + port;
 		}
+#elif defined(Q_OS_DARWIN)
+		const QString port = ports[iface].portName;
 #else
 		const QString port = ports[iface].physName;
 #endif
